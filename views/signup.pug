@@ -1,0 +1,16 @@
+extends layout
+
+block content
+    form.normform(action='/user/signup', method='POST')
+        fieldset
+            legend Sign Up
+            label(for='username') Username:
+            input#username(type='text' name='username' placeholder='your username' required)
+            label(for='email') Email:
+            input#email(type='email' name='email' placeholder='your email' required)
+            label(for='password') Password:
+            input#password(type='password' name='password' placeholder='Please make sure your password is secure' required)
+        br
+        .inline-buttons
+            input(type='reset' value='Reset')
+            input(type='submit' value='Submit')

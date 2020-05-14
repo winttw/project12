@@ -1,0 +1,70 @@
+doctype html
+html
+  head
+    title= title
+    block css
+      link(rel='stylesheet', href='/stylesheets/style.css')
+      link(rel='stylesheet', href='/stylesheets/normform.min.css')
+      link(rel='stylesheet', type='text/css', href='https://cdn.jsdelivr.net/npm/fomantic-ui@2.8.4/dist/semantic.min.css')
+  body
+    header
+      nav
+        include nav.pug
+    .ui.two.column.relaxed.grid
+      .row
+        .two.wide.column
+          include sidenav.pug
+        .fourteen.wide.column
+          main.main_container
+            block content
+    
+           
+
+      
+    footer
+      block footer
+        .ui.menu.bottom.fixed.borderless(style='justify-content:center')
+          a.item
+            | Advertising
+          a.item
+            | Business
+          a.item
+            | Privacy
+          a.item
+            | Terms
+          a.item
+            | Settings
+                
+
+      
+        .liveSupport.hidden.transition
+          .ui.card
+              .content
+                  h3 Live Support Chat
+              .image
+                  img
+              .content
+                  .ui.comments#somerow(style='overflow-y:scroll; scroll-behavior:smooth;max-height:200px;min-height:200px;')
+                      .comment
+                          a.avatar
+                              img.tiny(src='/images/support.png')
+                          .content
+                              a.author Support
+                              .text
+                                  | Welcome to Live Support, How Can i help you today?
+                      
+
+              .extra.content
+                .ui.action.input.transparent.fluid
+                      input(type='text', placeholder='Add Reply...', autocomplete='off', onkeypress='return onEnterP(event)')#reply
+                      i.paper.plane.outline.icon.cBlue.circular.pointer#xde(onclick='alul()')
+        button.circular.ui.icon.button.right.huge.liveSupportBlob(onclick='showChat()', style='right:0;z-index:999;position:fixed;')
+          i.icon.comments
+  
+    block js
+    
+      script(src='https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.0/jquery.min.js')
+      script(src='https://cdn.jsdelivr.net/npm/fomantic-ui@2.8.4/dist/semantic.min.js')
+      script(src='/javascripts/main.js')
+      script(src='https://kit.fontawesome.com/5bbbb0823d.js', crossorigin='anonymous')
+      

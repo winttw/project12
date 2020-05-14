@@ -1,0 +1,38 @@
+extends layout
+
+block content
+    
+    #container.containerxD
+        .form-container.sign-up-container
+            form(action='/user/signup', method='POST')
+                h1 Sign Up
+                .ui.input.formMargin
+                    input(type='text', placeholder='Name' name='username')
+                .ui.input.formMargin
+                    input(type='email', placeholder='Email', name='email', required)#email
+                .ui.input.formMargin
+                    input(type='password', placeholder='Password', name='password', required)#password
+                button.buttonxD(type='submit') Sign Up
+        .form-container.sign-in-container
+            form(action='/user/login', method='POST')
+                h1 Sign In
+                .ui.input.formMargin
+                    input(type='email', placeholder='Email', name='email', required)#email
+                .ui.input.formMargin
+                    input(type='password', placeholder='Password', name='password', required)#password
+                button.buttonxD(type='submit') Sign In
+        .overlay-container
+            .overlay
+                .overlay-panel.overlay-left
+                    h1 Welcome Back
+                    p To keep connected with us please login with your personal info
+                    button.buttonxD#signIn.ghost Sign In
+                .overlay-panel.overlay-right
+                    h1 Hi There!
+                    p Register and start to save money at ease!
+                    button.buttonxD#signUp.ghost Sign Up
+            if message && message.length
+                .ui.error.message
+                    .header Forbidden
+                    p=message
+

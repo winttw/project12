@@ -1,0 +1,90 @@
+extends layout
+
+block content
+    h1= title
+    h2.page-desc=page_description
+    table(id="calendar")
+        caption=selected_week
+        tr(class="weekdays")
+            th(scope='col') Sunday
+            th(scope='col') Monday
+            th(scope='col') Tuesday
+            th(scope='col') Wednesday
+            th(scope='col') Thursday
+            th(scope='col') Friday
+            th(scope='col') Saturday
+        tr(class="days")
+            each val in [1, 2, 3, 4, 5, 6, 7]
+                td.day
+                    if days_arr[val]
+                        .total-time=msToTime(days_arr[val]%8.64e7)
+    section.white_bg
+        strong(style="text-align: right")
+            p
+                span.medium_text.half_opacity Total hours this week: 
+                span.big_text=(Object.keys(days_arr).length ? msToTime(Object.values(days_arr).reduce((a, b) => a + b)%8.64e7) : "0")
+            p
+                span.medium_text.half_opacity Overtime hours this week: 
+                span.big_text=(Object.values(days_arr).filter(val => val > 8*3600000).length ? msToTime(Object.values(days_arr).filter(val => val > 8*3600000).map(val => val - 8*3600000).reduce((a, b) => a + b)%8.64e7) : "00:00:00")
+     
+    table.ui.celled.table
+        thead
+            tr
+            th Day
+            th In
+            th Out
+            th Lunch
+            th Total
+        tbody
+            each time_window in user.time_windows
+                - var start = new Date(time_window.shift_start)
+                - var end = time_window.shift_end>0 ? new Date(time_window.shift_end) : new Date()  
+                - var lunch_start = new Date(time_window.lunch_start)
+                - var lunch_end = new Date(time_window.lunch_end)
+                mixin tds
+                    td=`${start.getHours()}:${start.getMinutes().toString().length === 1 ? "0" + start.getMinutes() : start.getMinutes()}`
+                    td=`${end.getHours()}:${end.getMinutes().toString().length === 1 ? "0" + end.getMinutes() : end.getMinutes()}`
+                    td=lunch_start>0 && lunch_end>0 ? `${lunch_start.getHours()}:${lunch_start.getMinutes().toString().length === 1 ? "0" + lunch_start.getMinutes() : lunch_start.getMinutes()} - ${lunch_end.getHours()}:${lunch_end.getMinutes().toString().length === 1 ? "0" + lunch_end.getMinutes() : lunch_end.getMinutes()}` : '---'
+                    td=msToTime((time_window.shift_end>0 ? time_window.shift_end : Date.now())-time_window.shift_start - ((!time_window.lunch_end && time_window.lunch_start ? time_window.shift_end ? time_window.shift_end : Date.now() : time_window.lunch_end) - time_window.lunch_start) % 8.64e7)
+                tr(id=time_window._id)
+                    if !time_window.status
+                        td
+                            .ui.form
+                                .inline.field
+                                    .ui.checkbox
+                                        input(type='checkbox', tabindex='0')
+                                        label=start.toLocaleDateString("en-US", {month: 'long', day: 'numeric'})
+
+                        +tds
+                    else if time_window.status === 1
+                        td.positive
+                            i.icon.check
+                            span.i_span=start.toLocaleDateString("en-US", {month: 'long', day: 'numeric'})
+                        +tds
+                    else
+                        td.negative
+                            i.icon.close
+                            span.i_span=start.toLocaleDateString("en-US", {month: 'long', day: 'numeric'})
+                        +tds
+    button.ui.primary.button#update
+        | Submit Hours For Approval
+        
+block append js
+    script.
+        const upd = document.getElementById('update');
+        upd.addEventListener('click', function () {
+            const checked = document.querySelectorAll('input[type="checkbox"]:checked')
+            if (!checked.length) return;
+            const trs_ids = [...checked].map(el => el.closest('tr').id)
+            fetch(`/user/hours/submit`, {
+                method: 'PUT',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(trs_ids)
+            })
+            .then(res => {
+                if (res.ok) return res.json()
+            })
+            .then(data => {
+                window.location.reload(true)
+            })
+        })

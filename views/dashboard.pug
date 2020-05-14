@@ -1,0 +1,83 @@
+extends layout
+
+block content
+  if message && message.length
+      .success.flash=message
+  h1= title
+  h2.page-desc=page_description
+  .ui.column.grid.no_left_margin
+    .row
+      .four.wide.column.borderThing(style="background:#ffffff")
+        .hText.mainColorlBlue
+          | Hours worked
+        -var total_time = [...user.time_windows.filter(val => val.shift_start && val.shift_end).map(val => Math.abs(val.shift_end - val.shift_start)/3600000), ...user.time_windows.filter(val => val.shift_start && !val.shift_end).map(val => Math.abs(Date.now() - val.shift_start)/3600000)]
+        .lText=total_time.length ? total_time.reduce((a, b) => a + b).toFixed(2).replace('.', ':') : "0:00"
+      .four.wide.column.borderThing(style="background:#ffffff")
+        .hText.mainColorlBlue
+          | Employees In
+        .lText=active_users.length ? active_users.length : "0"
+      .four.wide.column.borderThing(style="background:#ffffff")
+        .hText.mainColorlBlue
+          | Appointments Today
+        .lText=active_tasks.length
+      .four.wide.column.borderThing(style="background:#ffffff")
+        .hText.mainColorlBlue
+          | Expense Total
+        .lText="$" + user.total_time
+  .ui.column.grid.no_left_margin
+    .two.column.row.dashboard_column_container
+      .column.dashboard_column(style="background:#ffffff; width:49%!important")
+        .hText.mainColorlBlue
+          | Who's Working
+        .ui.big.relaxed.list
+          if !active_users.length
+            span#time_punch_date(style="text-align:center;") ---
+          each member in active_users
+            .item
+              img.ui.avatar.image(src='https://f0.pngfuel.com/png/312/283/man-face-clip-art-png-clip-art-thumbnail.png')
+              .content
+                a.header=member.display_name
+                .description
+                  !=member.description
+     
+      
+      .column.dashboard_column(style="background:#ffffff; width:49%!important")
+        .hText.mainColorlBlue
+          | Time Punch
+        span#time_punch_date(style="text-align:center;")=new Date().toLocaleDateString("en-US", {month: 'long', day: 'numeric'}).split(' ').map(val => val.slice(0,3)).join(' ')
+        .circles_container
+          .circles
+            if user.status === 2
+              button.round_circle.circle_lunch_out.update#lunch Lunch
+            else
+              if user.status === 0
+                button.round_circle.circle_lunch.update#lunch(style='opacity: 0.5; cursor: not-allowed' disabled) Lunch
+              else
+                button.round_circle.circle_lunch.update#lunch Lunch
+            if user.status === 0
+              button.round_circle.circle_in.update#in In
+            else
+              button.round_circle.circle_out.update#out Out
+          .circles_text_block.half_opacity
+            span!=user.time_windows.length && user.time_windows[user.time_windows.length-1].shift_start ? "<b>IN</b> " + new Date(user.time_windows[user.time_windows.length-1].shift_start).toLocaleTimeString('en-US', { hour: 'numeric', minute: 'numeric' }) : "<b>---</b>"
+            span!=user.time_windows.length && user.time_windows[user.time_windows.length-1].shift_end ? "<b>OUT</b> " + new Date(user.time_windows[user.time_windows.length-1].shift_end).toLocaleTimeString('en-US', { hour: 'numeric', minute: 'numeric' }) : "<b>---</b>"
+
+block append js
+  script.
+    const update = document.getElementsByClassName('update');
+    for (let upd of update) {
+      upd.addEventListener('click', function () {
+        let obj = {type: this.id};
+        fetch(`/user/shift`, {
+          method: 'PUT',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify(obj)
+        })
+        .then(res => {
+          if (res.ok) return res.json()
+        })
+        .then(data => {
+          window.location.reload(true)
+        })
+      })
+    }

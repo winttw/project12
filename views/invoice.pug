@@ -1,0 +1,14 @@
+extends layout
+
+block content
+    form.normform(action='/user/invoice', method='PUT')
+        fieldset
+            legend Invoice ##{doc._id}
+            label(for='address') Address:
+            input#address(type='text' name='address' value=doc.address readonly)
+            label(for='amount') Amount:
+            input#amount(type='text' name='amount' value=doc.amount readonly)
+        br
+        .inline-buttons
+            input(type='reset' value='Reset')
+            input(type='submit' value='Cancel')

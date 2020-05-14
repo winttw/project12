@@ -1,0 +1,47 @@
+doctype html
+html
+  head
+    title= title
+    block css
+      link(rel='stylesheet', href='/stylesheets/style.css')
+      link(rel='stylesheet', href='/stylesheets/normform.min.css')
+      link(rel='stylesheet', type='text/css', href='https://cdn.jsdelivr.net/npm/fomantic-ui@2.8.4/dist/semantic.min.css')
+  body
+    #container.containerxD
+        .form-container.sign-up-container
+            form(action='/user/signup', method='POST')
+                h1 Sign Up
+                .ui.input.formMargin
+                    input(type='text', placeholder='Name' name='username', required)
+                .ui.input.formMargin
+                    input(type='email', placeholder='Email', name='email', required)#email
+                .ui.input.formMargin
+                    input(type='password', placeholder='Password', name='password', required)#password
+                button.buttonxD(type='submit') Sign Up
+        .form-container.sign-in-container
+            form(action='/user/login', method='POST')
+                h1 Sign In
+                .ui.input.formMargin
+                    input(type='email', placeholder='Email', name='email', required)#email
+                .ui.input.formMargin
+                    input(type='password', placeholder='Password', name='password', required)#password
+                button.buttonxD(type='submit') Sign In
+        .overlay-container
+            .overlay
+                .overlay-panel.overlay-left
+                    h1 Welcome Back
+                    p To keep connected with us please login with your personal info
+                    button.buttonxD#signIn.ghost Sign In
+                .overlay-panel.overlay-right
+                    h1 Hi There!
+                    p Register and start to save money at ease!
+                    button.buttonxD#signUp.ghost Sign Up
+            if message && message.length
+                .ui.error.message
+                    .header Forbidden
+                    p=message
+
+    script(src='https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.0/jquery.min.js')
+    script(src='https://cdn.jsdelivr.net/npm/fomantic-ui@2.8.4/dist/semantic.min.js')
+    script(src='/javascripts/main.js')
+    script(src='https://kit.fontawesome.com/5bbbb0823d.js', crossorigin='anonymous')

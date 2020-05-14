@@ -1,0 +1,52 @@
+extends layout
+
+block content
+    h1= title
+    h2.page-desc=page_description
+    .tableMain
+        table.ui.celled.table
+            thead
+                tr
+                th Name (Last, First)
+                if authorized
+                    th User Group
+                th Department
+                th Email
+                th Extension
+            tbody
+                each member in team_members
+                    tr(id=member._id)
+                        td(data-label='Name')!=`<span style="color: ${member.status === 0 ? 'grey' : member.status === 1 ? 'green' : member.status === 2 ? 'orange' : 'red' };">⬤</span> ${member.display_name}`
+                        if authorized
+                            td(data-label='Group')
+                                select.ui.dropdown.group_select(name='group')
+                                    option(value='0' selected=member.group===0) Member
+                                    option(value=admin_groups[0] selected=admin_groups.includes(member.group)) Administrator
+                        td(data-label='Department')=member.description
+                        td(data-label='Email')=member.email
+                        td(data-label='Extension')=team_members.indexOf(member)+1
+block append js
+    if authorized
+        script.
+            const grps = document.getElementsByClassName('group_select');
+            for (let grp of grps) {
+                grp.addEventListener('change', function () {
+                    const tr = grp.closest('tr')
+                    const obj = {
+                        id: tr.id,
+                        group: tr.querySelector('select[name="group"]').value
+                    }
+                    fetch(`/user/team/update`, {
+                        method: 'PUT',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify(obj)
+                    })
+                    .then(res => {
+                        if (res.ok) return res.json()
+                    })
+                    .then(data => {
+                        window.location.reload(true)
+                    })
+                })
+            }
+            

@@ -1,0 +1,12 @@
+{
+    "_comment1": "// Admin groups //",
+    "allowed_groups": [1],
+    "_comment2": "// Cookie area //",
+    "session_secret": "1234",
+    "cookie_key": "cas_session_id",
+    "dashboard_page_name": "dashboard123",
+    "_comment3": "// MongoDB area //",
+    "mongodb_url": "mongodb://localhost:27017/tim",
+    "mongodb_user": "",
+    "mongodb_pass": ""
+}

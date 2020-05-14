@@ -1,0 +1,132 @@
+extends layout
+
+block content
+    h1= title
+    h2.page-desc=page_description
+    table(id="calendar")
+        caption=selected_month
+        tr(class="weekdays")
+            th(scope='col') Sunday
+            th(scope='col') Monday
+            th(scope='col') Tuesday
+            th(scope='col') Wednesday
+            th(scope='col') Thursday
+            th(scope='col') Friday
+            th(scope='col') Saturday
+        tr(class="days")
+            each day in calendar
+                td.day(class=day.extra===2 ? 'current_day' : day.extra===0 ? 'other_month' : undefined)
+                    .date=day.day
+                    if day.tasks
+                        each task in day.tasks
+                            .event-container.task
+                                .event-desc=task.title + '\n' + task.description
+                    if day.events
+                        each event in day.events
+                            .event-container.event
+                                .event-desc=event.title+'\n'+event.description
+
+    .tableMain
+        if events.length
+            table.ui.celled.table
+                thead
+                    tr
+                    th Title
+                    th Event Start
+                    th Task End
+                    th.collapsing Delete
+                tbody
+                    each event in events
+                        tr(class="task" id=event._id)
+                            td
+                                input(type="text" name="title" value=event.title readonly=!authorized)
+                            td
+                                input(type='datetime-local' name='task-start' value=new Date(event.time_alloted.task_start).toISOString().slice(0,-8) min=new Date(event.time_alloted.task_start).toISOString().slice(0,-8) readonly=!authorized)
+                            td
+                                input(type='datetime-local' name='task-end' value=new Date(event.time_alloted.task_end).toISOString().slice(0,-8) min=new Date(event.time_alloted.task_start).toISOString().slice(0,-8) readonly=!authorized)
+                            td
+                                .ui.form
+                                    .inline.field
+                                        .ui.checkbox
+                                            input(type='checkbox', tabindex='0' name='delete' disabled=!authorized)
+                                            label
+            if authorized
+                button.ui.primary.button#update
+                    | Edit Events
+                button.ui.primary.button#delete
+                    | Delete Events
+        if authorized
+            form(action=`/user/events/create` method='POST')
+                fieldset(class="create_wrapper", style='margin-top:15px; padding:unset;')
+                    .ui.form
+                        .fields
+                            .field
+                                label Title
+                                input(type='text', placeholder='Title', name='title' required max=36 min=4)
+                            .field
+                                label Task Start
+                                input(type='datetime-local' name='task-start' value=new Date().toISOString().slice(0,-8) min=new Date().toISOString().slice(0,-8) max=new Date(Date.now() + 1000000000).toISOString().slice(0,-8))
+                            .field
+                                label Task End
+                                input(type='datetime-local' name='task-end' value=new Date().toISOString().slice(0,-8) min=new Date().toISOString().slice(0,-8) max=new Date(Date.now() + 1000000000).toISOString().slice(0,-8))
+                        button.ui.primary.button
+                            | Add Event
+    
+block append js
+    if authorized
+        script.
+        
+            let changed_trs = []
+            const inputs = document.getElementsByTagName('input');
+            const selects = document.getElementsByTagName('select');
+
+            for (let elem of [...inputs, ...selects]) {
+                elem.addEventListener('change', (event) => {
+                    const closest_tr = elem.closest('tr');
+                    if (changed_trs.includes(closest_tr)) return
+                    closest_tr.style.boxShadow = "inset 0.5em 0em 0em 0px gold"
+                    changed_trs.push(closest_tr)
+                })
+            }
+
+            const upd = document.getElementById('update');
+            upd.addEventListener('click', function () {
+                if (!changed_trs.length) return;
+                const obj_arr = [];
+                for (tr of changed_trs) {
+                    const obj = {
+                        id: tr.id,
+                        title: tr.querySelector('input[name="title"]').value,
+                        task_start: tr.querySelector('input[name="task-start"]').value,
+                        task_end: tr.querySelector('input[name="task-end"]').value,
+                    }
+                    obj_arr.push(obj)
+                }
+                fetch(`/user/events/update`, {
+                    method: 'PUT',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(obj_arr)
+                })
+                .then(res => {
+                    if (res.ok) return res.json()
+                })
+                .then(data => {
+                    window.location.reload(true)
+                })
+            })
+            const del = document.getElementById('delete');
+            del.addEventListener('click', function () {
+                if (!changed_trs.length) return;
+                const obj_arr = changed_trs.filter(tr => tr.querySelector('input[name="delete"]') && tr.querySelector('input[name="delete"]').checked);
+                fetch(`/user/events/delete`, {
+                    method: 'PUT',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(obj_arr.map(el => el.id))
+                })
+                .then(res => {
+                    if (res.ok) return res.json()
+                })
+                .then(data => {
+                    window.location.reload(true)
+                })
+            })

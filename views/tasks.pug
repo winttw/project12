@@ -1,0 +1,160 @@
+extends layout
+
+block content
+    h1= title
+    h2.page-desc=page_description
+    .tableMain
+        table.ui.celled.table
+            thead
+                tr
+                th Title
+                th Task Start
+                th Status
+                th Task End
+                th Employees
+                if authorized
+                    th.collapsing Delete
+                th Enroll
+            tbody
+                each task in tasks
+                    tr(class="task" id=task._id)
+                        td
+                            input(type="text" name="title" value=task.title readonly=!authorized)
+                        //- td=new Date(task.time_alloted.task_start).toString()
+                        td
+                            input(type='datetime-local' name='task-start' value=new Date(task.time_alloted.task_start).toISOString().slice(0,-8) min=new Date(task.time_alloted.task_start).toISOString().slice(0,-8) max=new Date(task.time_alloted.task_start + 1000000000).toISOString().slice(0,-8) readonly=!authorized)
+                        td
+                            select(name="status" disabled=!authorized).dropdown
+                                option(value="0" selected=task.status===0) Not Yet Started
+                                option(value="1" selected=task.status===1) In Progress
+                                option(value="2" selected=task.status===2) Completed
+                                option(value="3" selected=task.status===3) Inactive
+                        //- td=new Date(task.time_alloted.task_end).toString()
+                        td
+                            input(type='datetime-local' name='task-end' value=new Date(task.time_alloted.task_end).toISOString().slice(0,-8) min=new Date(task.time_alloted.task_start).toISOString().slice(0,-8) max=new Date(task.time_alloted.task_start + 1000000000).toISOString().slice(0,-8) readonly=!authorized)
+                        td
+                            select.ui.fluid.dropdown(name='employees' multiple='' disabled=!authorized)
+                                option(value='') Employees
+                                each employee in team_members
+                                    option(value=employee._id selected=task.employees.map(val=>val._id).includes(employee._id))=employee.display_name
+                                //- each employee in task.employees
+                                //-     option(value=employee._id selected)=employee.display_name
+                        if authorized
+                            td.text_center
+                                .ui.form
+                                    .inline.field
+                                        .ui.checkbox
+                                            input(type='checkbox', tabindex='0' name='delete' disabled=!authorized)
+                                            label
+                        td.text_center
+                            button.compact.ui.button.enroll=(task.employees.find(val => val.equals(user._id)) ? '❌' : '✔️')
+        if authorized
+            button.ui.primary.button#update
+                | Edit Tasks
+            button.ui.primary.button#delete
+                | Delete Tasks
+    if authorized
+        form(action=`/user/tasks/create` method='POST')
+            fieldset(class="create_wrapper", style='margin-top:15px; padding:unset;')
+                .ui.form
+                    .fields
+                        .field
+                            label Title
+                            input(type='text', placeholder='Title', name='title' required max=36 min=4)
+                        .field
+                            label Task Start
+                            input(type='datetime-local' name='task-start' value=new Date().toISOString().slice(0,-8) min=new Date().toISOString().slice(0,-8) max=new Date(Date.now() + 1000000000).toISOString().slice(0,-8))
+                        .field
+                            label Status
+                            select.ui.dropdown(name='status')
+                                option(value="0") Not Yet Started
+                                option(value="1") In Progress
+                                option(value="2") Completed
+                                option(value="3") Inactive
+                        .field
+                            label Task End
+                            input(type='datetime-local' name='task-end' value=new Date().toISOString().slice(0,-8) min=new Date().toISOString().slice(0,-8) max=new Date(Date.now() + 1000000000).toISOString().slice(0,-8))
+
+            
+                    button.ui.primary.button
+                        | Add Task
+    
+block append js
+    if authorized
+        script.
+            let changed_trs = []
+            const inputs = document.getElementsByTagName('input');
+            const selects = document.getElementsByTagName('select');
+
+            for (let elem of [...inputs, ...selects]) {
+                elem.addEventListener('change', (event) => {
+                    const closest_tr = elem.closest('tr');
+                    if (changed_trs.includes(closest_tr)) return
+                    closest_tr.style.boxShadow = "inset 0.5em 0em 0em 0px gold"
+                    changed_trs.push(closest_tr)
+                })
+            }
+
+            const upd = document.getElementById('update');
+            upd.addEventListener('click', function () {
+                if (!changed_trs.length) return;
+                const obj_arr = [];
+                for (tr of changed_trs) {
+                    const obj = {
+                        id: tr.id,
+                        title: tr.querySelector('input[name="title"]').value,
+                        task_start: tr.querySelector('input[name="task-start"]').value,
+                        status: tr.querySelector('select[name="status"]').value,
+                        task_end: tr.querySelector('input[name="task-end"]').value,
+                        employees: [...tr.querySelector('select[name="employees"]').selectedOptions].map(val => val.value)
+                    }
+                    console.log(obj)
+                    obj_arr.push(obj)
+                }
+                fetch(`/user/tasks/update`, {
+                    method: 'PUT',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(obj_arr)
+                })
+                .then(res => {
+                    if (res.ok) return res.json()
+                })
+                .then(data => {
+                    window.location.reload(true)
+                })
+            })
+            const del = document.getElementById('delete');
+            del.addEventListener('click', function () {
+                if (!changed_trs.length) return;
+                const obj_arr = changed_trs.filter(tr => tr.querySelector('input[name="delete"]') && tr.querySelector('input[name="delete"]').checked);
+                fetch(`/user/tasks/delete`, {
+                    method: 'PUT',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(obj_arr.map(el => el.id))
+                })
+                .then(res => {
+                    if (res.ok) return res.json()
+                })
+                .then(data => {
+                    window.location.reload(true)
+                })
+            })
+    
+    script.
+        const enrolls = document.getElementsByClassName('enroll');
+        for (let enroll of enrolls) {
+            enroll.addEventListener('click', function () {
+                const obj = {id: enroll.closest('tr').id}
+                fetch(`/user/tasks/enroll`, {
+                    method: 'PUT',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(obj)
+                })
+                .then(res => {
+                    if (res.ok) return res.json()
+                })
+                .then(data => {
+                    window.location.reload(true)
+                })
+            })
+        }

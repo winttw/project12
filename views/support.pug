@@ -1,0 +1,27 @@
+extends layout
+
+block content
+    h1= title
+    h2.page-desc=page_description
+    .ui.grid.celled
+        .four.wide.column.whiteBg
+            .alignCenter
+                i.fas.fa-phone-square-alt.fa-10x.cBlue
+            h1.cBlue Call Us
+            h3=user.company ? user.company.phone : '333 4444 55 55'
+        .four.wide.column.whiteBg
+            .alignCenter
+                i.fas.fa-envelope-square.fa-10x.cBlue
+            h1.cBlue Email Us
+            h3=user.company ? user.company.contact : 'support@tim.com'
+        .four.wide.column.whiteBg
+            .alignCenter
+                i.fas.fa-comment-alt.fa-10x.cBlue
+            h1.cBlue Chat
+            h3 Live chat Available 24/7
+        .four.wide.column.whiteBg
+            .alignCenter
+                i.fas.fa-question.fa-10x.cBlue
+            h1.cBlue FAQs
+            h3 Frequently Asked Questions   
+    
